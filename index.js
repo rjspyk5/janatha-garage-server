@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 const app = express();
 const port = process.env.PORT || 5000;
@@ -25,11 +25,32 @@ async function run() {
     const servicesCollection = client
       .db("janathaGarage")
       .collection("services");
+    const ordersCollection = client.db("janathaGarage").collection("order");
 
     //   get services form database
     app.get("/services", async (req, res) => {
       const cursor = servicesCollection.find();
       const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    //find specific services data from database
+    app.get("/services/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const options = {
+        projection: { title: 1, price: 1 },
+      };
+
+      const result = await servicesCollection.findOne(query, options);
+      res.send(result);
+    });
+
+    // orders api
+    app.post("/book", async (req, res) => {
+      const data = req.body;
+
+      const result = await ordersCollection.insertOne(data);
       res.send(result);
     });
 
