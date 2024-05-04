@@ -47,10 +47,20 @@ async function run() {
     });
 
     // orders api
-    app.post("/book", async (req, res) => {
+    app.post("/bookings", async (req, res) => {
       const data = req.body;
 
       const result = await ordersCollection.insertOne(data);
+      res.send(result);
+    });
+
+    app.get("/bookings", async (req, res) => {
+      const email = req.query.email;
+      let query = {};
+      if (email) {
+        query = { email: email };
+      }
+      const result = await ordersCollection.find(query).toArray();
       res.send(result);
     });
 
