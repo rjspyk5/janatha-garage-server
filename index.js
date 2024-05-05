@@ -39,7 +39,7 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const options = {
-        projection: { title: 1, price: 1 },
+        projection: { title: 1, price: 1, img: 1 },
       };
 
       const result = await servicesCollection.findOne(query, options);
@@ -61,6 +61,13 @@ async function run() {
         query = { email: email };
       }
       const result = await ordersCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    app.delete("/book/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await ordersCollection.deleteOne(query);
       res.send(result);
     });
 
