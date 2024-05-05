@@ -27,6 +27,12 @@ async function run() {
       .collection("services");
     const ordersCollection = client.db("janathaGarage").collection("order");
 
+    //  Auth related API
+    app.post("/jwt", async (req, res) => {
+      const user = req.body;
+      res.send(user);
+    });
+
     //   get services form database
     app.get("/services", async (req, res) => {
       const cursor = servicesCollection.find();
