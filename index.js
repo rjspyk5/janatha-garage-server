@@ -71,6 +71,19 @@ async function run() {
       res.send(result);
     });
 
+    app.patch("/book/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const data = req.body;
+      const updated = {
+        $set: {
+          status: data.status,
+        },
+      };
+
+      const result = await ordersCollection.updateOne(filter, updated);
+      res.send(result);
+    });
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
     // Send a ping to confirm a successful connection
