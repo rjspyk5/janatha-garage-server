@@ -8,14 +8,28 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 // middleware
-app.user(cookieParser());
+app.use(cookieParser());
 app.use(express.json());
 app.use(
   cors({
-    origin: ["http://localhost:5174", "http://localhost:5173"],
+    origin: ["http://localhost:5173", "http://localhost:5174"],
     credentials: true,
   })
 );
+// custom middle
+const verifyToken = async (req, res, next) => {
+  const token = req.cookies?.token;
+  if (!token) {
+    return res.status(401).send({ message: "not authorized" });
+  }
+  jwt.verify(token, process.env.access_token, (err, decoded) => {
+    if (err) {
+      return res.status(401).send({ message: "unauthorized" });
+    }
+    req.user = decoded;
+    next();
+  });
+};
 
 const uri = `mongodb+srv://${process.env.user}:${process.env.pass}@cluster0.omgilvs.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -41,12 +55,11 @@ async function run() {
       const token = jwt.sign(user, process.env.access_token, {
         expiresIn: "1h",
       });
+
       res
         .cookie("token", token, {
           httpOnly: true,
           secure: false,
-          // In devlopment  secure:false dite hbe r production e secure:true dite hbe
-          sameSite: "none",
         })
         .send({ success: true });
     });
@@ -73,13 +86,16 @@ async function run() {
     // orders api
     app.post("/bookings", async (req, res) => {
       const data = req.body;
-
+      console.log(req.cookies.token);
       const result = await ordersCollection.insertOne(data);
       res.send(result);
     });
 
-    app.get("/bookings", async (req, res) => {
+    app.get("/bookings", verifyToken, async (req, res) => {
       const email = req.query.email;
+      if (email !== req.user.email) {
+        return res.status(401).send({ message: "forbbiden" });
+      }
       let query = {};
       if (email) {
         query = { email: email };
