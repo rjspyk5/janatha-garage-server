@@ -8,8 +8,14 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 // middleware
+app.user(cookieParser());
 app.use(express.json());
-app.use(cors());
+app.use(
+  cors({
+    origin: ["http://localhost:5174", "http://localhost:5173"],
+    credentials: true,
+  })
+);
 
 const uri = `mongodb+srv://${process.env.user}:${process.env.pass}@cluster0.omgilvs.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -35,7 +41,14 @@ async function run() {
       const token = jwt.sign(user, process.env.access_token, {
         expiresIn: "1h",
       });
-      res.send(token);
+      res
+        .cookie("token", token, {
+          httpOnly: true,
+          secure: false,
+          // In devlopment  secure:false dite hbe r production e secure:true dite hbe
+          sameSite: "none",
+        })
+        .send({ success: true });
     });
 
     //   get services form database
