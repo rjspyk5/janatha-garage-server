@@ -1,6 +1,6 @@
 const express = require("express");
-var jwt = require("jsonwebtoken");
-var cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
@@ -12,16 +12,16 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:5174"],
+    origin: ["http://localhost:5174", "http://localhost:5173"],
     credentials: true,
   })
 );
 
-// custom middle
+// custom middleware
 const verifyToken = async (req, res, next) => {
   const token = req.cookies?.token;
   if (!token) {
-    return res.status(401).send({ message: "not authorized" });
+    return res.status(401).send({ message: "unautorized" });
   }
   jwt.verify(token, process.env.access_token, (err, decoded) => {
     if (err) {
@@ -49,28 +49,23 @@ async function run() {
       .db("janathaGarage")
       .collection("services");
     const ordersCollection = client.db("janathaGarage").collection("order");
-
     //  Auth related API
     app.post("/jwt", async (req, res) => {
       const user = req.body;
       const token = jwt.sign(user, process.env.access_token, {
-        expiresIn: "1h",
+        expiresIn: "1hr",
       });
-
-      res
-        .cookie("token", token, {
-          httpOnly: true,
-          secure: true,
-          sameSite: "none",
-        })
-        .send({ success: true });
+      res.cookie("token", token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+      });
     });
 
     app.post("/logout", async (req, res) => {
       const user = req.body;
       res.clearCookie("token", { maxAge: 0 }).send({ success: true });
     });
-
     //   get services form database
     app.get("/services", async (req, res) => {
       const cursor = servicesCollection.find();
