@@ -55,13 +55,14 @@ async function run() {
       const token = jwt.sign(user, process.env.access_token, {
         expiresIn: "1hr",
       });
-      res.cookie("token", token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-      });
+      res
+        .cookie("token", token, {
+          httpOnly: true,
+          secure: true,
+          sameSite: "none",
+        })
+        .send({ success: true });
     });
-
     app.post("/logout", async (req, res) => {
       const user = req.body;
       res.clearCookie("token", { maxAge: 0 }).send({ success: true });
@@ -86,9 +87,12 @@ async function run() {
     });
 
     // orders api
-    app.post("/bookings", async (req, res) => {
+    app.post("/bookings", verifyToken, async (req, res) => {
       const data = req.body;
-      console.log(req.cookies.token);
+      const email = req.body.email;
+      if (email !== req.user?.email) {
+        return res.status(401).send({ message: "forbbiden" });
+      }
       const result = await ordersCollection.insertOne(data);
       res.send(result);
     });
